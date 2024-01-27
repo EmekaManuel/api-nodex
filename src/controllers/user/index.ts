@@ -47,8 +47,50 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
 export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
   try {
     const allUsers = await User.find();
-    res.status(404).json({ msg: 'All Users found', success: true, allUsers });
+    res.status(200).json({ msg: 'All Users found', success: true, allUsers });
   } catch (error: any) {
     throw new Error(error);
+  }
+});
+
+export const getUserById = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const getUserById = await User.findById(id);
+    res.status(200).json({ msg: 'User found', success: true, getUserById });
+  } catch (error) {
+    throw new Error("User Doesn't exist");
+  }
+});
+
+export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const getUserById = await User.findById(id);
+    res.status(200).json({ msg: 'User Deleted', success: true, getUserById });
+  } catch (error) {
+    throw new Error("User Doesn't exist");
+  }
+});
+
+export const updateUser = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      {
+        name: req?.body?.name,
+        email: req?.body?.email,
+        password: req?.body?.password,
+        mobile: req?.body?.mobile,
+      },
+      { new: true },
+    );
+    res.status(200).json({ msg: 'User Updated', success: true, updatedUser });
+  } catch (error) {
+    throw new Error('Error updating user');
   }
 });
