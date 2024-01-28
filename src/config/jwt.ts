@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-interface TokenPayload {
+export interface TokenPayload {
   id: string;
 }
 
