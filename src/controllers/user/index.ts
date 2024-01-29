@@ -3,6 +3,8 @@ import asyncHandler from 'express-async-handler';
 import bcrypt from 'bcryptjs';
 import User from '../../models/userModel';
 import generateToken from '../../config/jwt';
+import { AuthRequest } from '../../middlewares/authMiddleware';
+import { validateMongodbId } from '../../utils/validatemongodbId';
 
 export const createUser = asyncHandler(async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -55,6 +57,7 @@ export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
 
 export const getUserById = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
+  validateMongodbId(id);
 
   try {
     const getUserById = await User.findById(id);
@@ -66,6 +69,7 @@ export const getUserById = asyncHandler(async (req: Request, res: Response) => {
 
 export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
+  validateMongodbId(id);
 
   try {
     const getUserById = await User.findById(id);
@@ -75,9 +79,9 @@ export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-export const updateUser = asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
-
+export const updateUser = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { id } = req.user;
+  validateMongodbId(id);
   try {
     const updatedUser = await User.findByIdAndUpdate(
       id,
@@ -86,11 +90,54 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
         email: req?.body?.email,
         password: req?.body?.password,
         mobile: req?.body?.mobile,
+        role: req?.body?.role,
       },
       { new: true },
     );
     res.status(200).json({ msg: 'User Updated', success: true, updatedUser });
   } catch (error) {
     throw new Error('Error updating user');
+  }
+});
+
+export const blockUser = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  validateMongodbId(id);
+
+  try {
+    const blockedUser = await User.findByIdAndUpdate(
+      id,
+      {
+        isBlocked: true,
+      },
+      { new: true },
+    );
+
+    if (blockedUser) {
+      res.json({ msg: 'User blocked', user: blockedUser });
+    } else {
+      res.status(404).json({ msg: 'User not found' });
+    }
+  } catch (error) {
+    console.log(error);
+    throw new Error('Unable to block user');
+  }
+});
+
+export const unBlockUser = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  validateMongodbId(id);
+
+  try {
+    const unBlock = await User.findByIdAndUpdate(
+      id,
+      {
+        isBlocked: false,
+      },
+      { new: true },
+    );
+    res.json({ msg: 'User unblocked', unBlock });
+  } catch (error) {
+    throw new Error('unable to unblock user');
   }
 });

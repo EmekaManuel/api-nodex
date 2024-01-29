@@ -5,10 +5,11 @@ interface User extends Document {
   email: string;
   mobile: string;
   password: string;
-  isAdmin: string;
+  role: string;
   cart: string[];
   address: Types.ObjectId[];
   wishlist: Types.ObjectId[];
+  isBlocked: boolean;
 }
 
 const userSchema: Schema<User> = new mongoose.Schema(
@@ -32,9 +33,13 @@ const userSchema: Schema<User> = new mongoose.Schema(
       type: String,
       required: true,
     },
-    isAdmin: {
+    role: {
       type: String,
       default: 'user',
+    },
+    isBlocked: {
+      type: Boolean,
+      default: false,
     },
     cart: {
       type: [String], // Use StringConstructor to define an array of strings
