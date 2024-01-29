@@ -9,7 +9,7 @@ export interface TokenPayload {
 
 const generateToken = (id: string): string => {
   const tokenPayload: TokenPayload = { id };
-  return JWt.sign(tokenPayload, process.env.JWT || '', { expiresIn: '3d' });
+  return JWt.sign(tokenPayload, process.env.JWT || '', { expiresIn: '1d' });
 };
 
 export default generateToken;

@@ -10,6 +10,7 @@ interface User extends Document {
   address: Types.ObjectId[];
   wishlist: Types.ObjectId[];
   isBlocked: boolean;
+  refreshToken: string;
 }
 
 const userSchema: Schema<User> = new mongoose.Schema(
@@ -40,6 +41,9 @@ const userSchema: Schema<User> = new mongoose.Schema(
     isBlocked: {
       type: Boolean,
       default: false,
+    },
+    refreshToken: {
+      type: String,
     },
     cart: {
       type: [String], // Use StringConstructor to define an array of strings

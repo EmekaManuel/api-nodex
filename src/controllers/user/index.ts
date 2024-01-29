@@ -3,6 +3,7 @@ import asyncHandler from 'express-async-handler';
 import bcrypt from 'bcryptjs';
 import User from '../../models/userModel';
 import generateToken from '../../config/jwt';
+import { generateRefreshToken } from '../../config/refreshToken';
 import { AuthRequest } from '../../middlewares/authMiddleware';
 import { validateMongodbId } from '../../utils/validatemongodbId';
 
@@ -39,11 +40,26 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
     res.status(404).json({ msg: 'User not found', success: false });
     return;
   }
+  const refreshToken = await generateRefreshToken(user?.id);
+
+  const updateUser = await User.findByIdAndUpdate(
+    user?.id,
+    {
+      refreshToken: refreshToken,
+    },
+    { new: true },
+  );
+  res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000,
+  });
 
   const isPasswordMatch = await bcrypt.compare(password, user.password);
   if (isPasswordMatch) {
-    res.json({ msg: 'Login successful', success: true, user, token: generateToken(user?._id) });
-  } else [res.status(401).json({ msg: 'Password do not match', success: false })];
+    res.json({ msg: 'Login successful', success: true, token: generateToken(user?._id), user: updateUser });
+  } else {
+    res.status(401).json({ msg: 'Password do not match', success: false });
+  }
 });
 
 export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
@@ -119,7 +135,6 @@ export const blockUser = asyncHandler(async (req: Request, res: Response) => {
       res.status(404).json({ msg: 'User not found' });
     }
   } catch (error) {
-    console.log(error);
     throw new Error('Unable to block user');
   }
 });
@@ -141,3 +156,4 @@ export const unBlockUser = asyncHandler(async (req: Request, res: Response) => {
     throw new Error('unable to unblock user');
   }
 });
+
