@@ -156,4 +156,24 @@ export const unBlockUser = asyncHandler(async (req: Request, res: Response) => {
     throw new Error('unable to unblock user');
   }
 });
+export const logout = asyncHandler(async (req: Request, res: Response) => {
+  const cookies = req.cookies;
 
+  const refreshToken = cookies.refreshToken;
+  if (!refreshToken) throw new Error('No refresh token found in cookie');
+
+  const user = await User.findOne({ refreshToken });
+  if (!user) {
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: true,
+    });
+    res.sendStatus(204);
+  }
+  await User.findOneAndUpdate({ refreshToken: refreshToken }, { refreshToken: '' });
+  res.clearCookie('refreshToken', {
+    httpOnly: true,
+    secure: true,
+  });
+  res.sendStatus(204);
+});

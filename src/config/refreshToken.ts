@@ -16,18 +16,25 @@ export const generateRefreshToken = (id: string): string => {
 };
 
 export const handleRefreshToken = asyncHandler(async (req: Request, res: Response) => {
-  const cookie = req.cookies;
+  const cookies = req.cookies;
 
-  if (!cookie?.refreshToken) throw new Error('no refresh token in cookie');
+  if (!cookies?.refreshToken) throw new Error('no refresh token in cookie');
 
-  const refreshToken = cookie.refreshToken;
+  const refreshToken = cookies.refreshToken;
+
   const user = await User.findOne({ refreshToken });
-  res.json(user);
-  if (!user) throw new Error('No refresh token for this user');
-  console.log(refreshToken);
+
+  if (!user) {
+    throw new Error('No refresh token for this user');
+  }
 
   if (refreshToken && user) {
     JWt.verify(refreshToken, process.env.JWT || '', (err: any, decoded: any) => {
+      if (err || user.id !== decoded.id) {
+        throw new Error('There is something wrong with this refresh token');
+      }
+      const accessToken = generateRefreshToken(user?.id);
+      res.json({ accessToken });
       console.log(decoded);
     });
   }
