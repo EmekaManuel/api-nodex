@@ -7,7 +7,7 @@ import { generateRefreshToken } from '../../config/refreshToken';
 import { AuthRequest } from '../../middlewares/authMiddleware';
 import { validateMongodbId } from '../../utils/validatemongodbId';
 
-export const createUser = asyncHandler(async (req: Request, res: Response) => {
+export const registerUser = asyncHandler(async (req: Request, res: Response) => {
   const { email, password } = req.body;
   const userExist = await User.findOne({ email });
 
@@ -144,18 +144,19 @@ export const unBlockUser = asyncHandler(async (req: Request, res: Response) => {
   validateMongodbId(id);
 
   try {
-    const unBlock = await User.findByIdAndUpdate(
+    const unBlockedUser = await User.findByIdAndUpdate(
       id,
       {
         isBlocked: false,
       },
       { new: true },
     );
-    res.json({ msg: 'User unblocked', unBlock });
+    res.json({ msg: 'User unblocked', unBlockedUser });
   } catch (error) {
     throw new Error('unable to unblock user');
   }
 });
+
 export const logout = asyncHandler(async (req: Request, res: Response) => {
   const cookies = req.cookies;
 

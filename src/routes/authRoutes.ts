@@ -1,11 +1,21 @@
 import express from 'express';
-import { loginUser, createUser, getAllUsers, getUserById, deleteUser, updateUser, blockUser, unBlockUser, logout } from '../controllers/user';
+import {
+  loginUser,
+  registerUser,
+  getAllUsers,
+  getUserById,
+  deleteUser,
+  updateUser,
+  blockUser,
+  unBlockUser,
+  logout,
+} from '../controllers/user';
 import { authMiddleware, isAdmin } from '../middlewares/authMiddleware';
 import { handleRefreshToken } from '../config/refreshToken';
 
 const router = express.Router();
 
-router.post('/register', createUser);
+router.post('/register', registerUser);
 router.post('/login', loginUser);
 
 router.get('/all-users', getAllUsers);
