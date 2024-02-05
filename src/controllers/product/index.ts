@@ -28,10 +28,22 @@ export const findProduct = asyncHandler(async (req: Request, res: Response) => {
 export const getAllProduct = asyncHandler(async (req: Request, res: Response) => {
   console.log(req.query);
   try {
-    const allProducts = await Product.find(req.query);
-    res.json({ msg: ' products found', allProducts });
-  } catch (error) {
-    throw new Error('error finding product');
+    const queryObj = { ...req.query };
+    const excludedFields = ['page', 'limit', 'sort', 'fields'];
+    excludedFields.forEach((field) => delete queryObj[field]);
+
+    let queryStr = JSON.stringify(queryObj);
+
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+
+    console.log(JSON.parse(queryStr));
+
+    const query = Product.find(JSON.parse(queryStr));
+    const product = await query;
+
+    res.json(product);
+  } catch (error: any) {
+    throw new Error(error);
   }
 });
 
