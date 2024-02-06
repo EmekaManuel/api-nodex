@@ -11,6 +11,9 @@ interface User extends Document {
   wishlist: Types.ObjectId[];
   isBlocked: boolean;
   refreshToken: string;
+  passwordChangedAt: Date;
+  passwordResetExpires: Date;
+  PasswordResetToken: string;
 }
 
 const userSchema: Schema<User> = new mongoose.Schema(
@@ -51,6 +54,15 @@ const userSchema: Schema<User> = new mongoose.Schema(
     },
     address: [{ type: Schema.Types.ObjectId, ref: 'Address' }],
     wishlist: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
+    passwordChangedAt: {
+      type: Date,
+    },
+    passwordResetExpires: {
+      type: Date,
+    },
+    PasswordResetToken: {
+      type: String,
+    },
   },
   {
     timestamps: true,
