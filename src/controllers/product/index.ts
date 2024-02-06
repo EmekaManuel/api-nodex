@@ -33,15 +33,41 @@ export const getAllProduct = asyncHandler(async (req: Request, res: Response) =>
     excludedFields.forEach((field) => delete queryObj[field]);
 
     let queryStr = JSON.stringify(queryObj);
-
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+    let query = Product.find(JSON.parse(queryStr));
 
-    console.log(JSON.parse(queryStr));
+    // sorting
+    if (req.query.sort) {
+      const sortBy = (req.query.sort as string).split(',').join(' ');
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort('-createdAt');
+    }
 
-    const query = Product.find(JSON.parse(queryStr));
+    // limiting the fields
+    if (req.query.fields) {
+      const fields = (req.query.fields as string).split(',').join(' ');
+      query = query.select(fields);
+    } else {
+      query = query.select('-__v');
+    }
+
+    // pagination
+    const page = parseInt(req.query.page as string);
+    const limit = parseInt(req.query.limit as string);
+    const skip = (page - 1) * limit;
+    console.log(page, skip, limit);
+
+    query = query.skip(skip).limit(limit);
+
+    if (req.query.page) {
+      const productCount = await Product.countDocuments();
+      console.log(productCount);
+      if (skip >= productCount) throw new Error('This page doesn not exist');
+    }
+
     const product = await query;
-
-    res.json(product);
+    res.status(200).json(product);
   } catch (error: any) {
     throw new Error(error);
   }
