@@ -13,7 +13,7 @@ interface User extends Document {
   refreshToken: string;
   passwordChangedAt: Date;
   passwordResetExpires: Date;
-  PasswordResetToken: string;
+  passwordResetToken: string;
 }
 
 const userSchema: Schema<User> = new mongoose.Schema(
@@ -60,7 +60,7 @@ const userSchema: Schema<User> = new mongoose.Schema(
     passwordResetExpires: {
       type: Date,
     },
-    PasswordResetToken: {
+    passwordResetToken: {
       type: String,
     },
   },

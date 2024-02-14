@@ -6,6 +6,8 @@ import {
   getUserById,
   deleteUser,
   updateUser,
+  resetPassword,
+  requestPasswordRequest,
   blockUser,
   unBlockUser,
   logout,
@@ -17,6 +19,8 @@ const router = express.Router();
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
+router.post('/request-password-reset', requestPasswordRequest);
+router.put('/password-reset', authMiddleware, resetPassword);
 
 router.get('/all-users', getAllUsers);
 router.get('/refresh', handleRefreshToken);

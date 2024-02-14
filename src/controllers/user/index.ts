@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import bcrypt from 'bcryptjs';
 import User from '../../models/userModel';
@@ -6,6 +6,9 @@ import generateToken from '../../config/jwt';
 import { generateRefreshToken } from '../../config/refreshToken';
 import { AuthRequest } from '../../middlewares/authMiddleware';
 import { validateMongodbId } from '../../utils/validatemongodbId';
+import { generateResetToken } from '../../utils/helpers';
+import crypto from 'crypto';
+import { sendEmail } from '../../utils/mailer';
 
 export const registerUser = asyncHandler(async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -177,4 +180,72 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
     secure: true,
   });
   res.sendStatus(204);
+});
+
+export const requestPasswordRequest = asyncHandler(async (req: Request, res: Response) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    res.status(404).json({ msg: 'User not found', success: false });
+    return;
+  }
+
+  const resetToken = generateResetToken();
+  const hashedResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+  user.passwordResetToken = hashedResetToken;
+
+  const expirationTime = new Date(Date.now() + 30 * 60 * 1000);
+  user.passwordResetExpires = expirationTime;
+
+  await user.save();
+  const resetUrl = `
+  <p>Dear User,</p>
+  <p>We have received a request to reset your password for your account. To proceed with the password reset, please click on the link below:</p>
+  <p><a href='http://localhost:5000/api/user/request-password-reset/${hashedResetToken}' target='_blank'>Reset Password</a></p>
+  <p>Please note that this link will expire in 30 minutes for security reasons.</p>
+  <p>If you did not request this password reset, you can safely ignore this email. Your account remains secure.</p>
+  <p>Thank you,</p>
+  <p>Oga Manuel 💯</p>
+`;
+
+  const data = {
+    to: email,
+    subject: 'Password Reset Request',
+    html: resetUrl,
+  };
+  // @ts-ignore
+  sendEmail(data);
+  res.status(200).json({ msg: 'Reset token sent to email', success: true, token: hashedResetToken });
+});
+
+export const resetPassword = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
+  const { id } = req.user;
+  validateMongodbId(id);
+  const { newPassword } = req.body;
+
+  const user = await User.findById(id);
+
+  if (!user) {
+    res.status(404).json({ msg: 'user not found', success: false });
+    return;
+  }
+
+  if (!newPassword) {
+    res.status(400).json({ msg: 'New password is required', success: false });
+    return;
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    user.password = hashedPassword;
+    await user.save();
+
+    console.log(`Password reset successful for user ID: ${id}`);
+    res.json({ msg: 'Password reset successfully', success: true });
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    res.status(500).json({ msg: 'Internal server error', success: false });
+  }
 });
