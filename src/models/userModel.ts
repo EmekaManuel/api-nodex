@@ -12,8 +12,8 @@ interface User extends Document {
   isBlocked: boolean;
   refreshToken: string;
   passwordChangedAt: Date;
-  passwordResetExpires: Date;
-  passwordResetToken: string;
+  passwordResetExpires: Date | undefined;
+  passwordResetToken: string | undefined;
 }
 
 const userSchema: Schema<User> = new mongoose.Schema(

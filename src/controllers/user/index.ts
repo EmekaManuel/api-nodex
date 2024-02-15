@@ -182,44 +182,7 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
   res.sendStatus(204);
 });
 
-export const requestPasswordRequest = asyncHandler(async (req: Request, res: Response) => {
-  const { email } = req.body;
-  const user = await User.findOne({ email });
-
-  if (!user) {
-    res.status(404).json({ msg: 'User not found', success: false });
-    return;
-  }
-
-  const resetToken = generateResetToken();
-  const hashedResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-  user.passwordResetToken = hashedResetToken;
-
-  const expirationTime = new Date(Date.now() + 30 * 60 * 1000);
-  user.passwordResetExpires = expirationTime;
-
-  await user.save();
-  const resetUrl = `
-  <p>Dear User,</p>
-  <p>We have received a request to reset your password for your account. To proceed with the password reset, please click on the link below:</p>
-  <p><a href='http://localhost:5000/api/user/request-password-reset/${hashedResetToken}' target='_blank'>Reset Password</a></p>
-  <p>Please note that this link will expire in 30 minutes for security reasons.</p>
-  <p>If you did not request this password reset, you can safely ignore this email. Your account remains secure.</p>
-  <p>Thank you,</p>
-  <p>Oga Manuel 💯</p>
-`;
-
-  const data = {
-    to: email,
-    subject: 'Password Reset Request',
-    html: resetUrl,
-  };
-  // @ts-ignore
-  sendEmail(data);
-  res.status(200).json({ msg: 'Reset token sent to email', success: true, token: hashedResetToken });
-});
-
-export const resetPassword = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const updatePassword = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
   const { id } = req.user;
   validateMongodbId(id);
   const { newPassword } = req.body;
@@ -242,10 +205,87 @@ export const resetPassword = asyncHandler(async (req: AuthRequest, res: Response
     user.password = hashedPassword;
     await user.save();
 
-    console.log(`Password reset successful for user ID: ${id}`);
-    res.json({ msg: 'Password reset successfully', success: true });
+    console.log(`Password update successful for user ID: ${id}`);
+    res.json({ msg: 'Password updated successfully', success: true });
   } catch (error) {
-    console.error('Error resetting password:', error);
+    console.error('Error updating password:', error);
+    res.status(500).json({ msg: 'Internal server error', success: false });
+  }
+});
+
+export const requestPasswordReset = asyncHandler(async (req: Request, res: Response) => {
+  const { email } = req.body;
+  console.log('Request received for password reset for email:', email);
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    console.log('User not found for email:', email);
+    res.status(404).json({ msg: 'User not found', success: false });
+    return;
+  }
+
+  const resetToken = generateResetToken();
+  const hashedResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+  console.log('Generated reset token:', resetToken);
+
+  user.passwordResetToken = hashedResetToken;
+  const expirationTime = new Date(Date.now() + 30 * 60 * 1000);
+  user.passwordResetExpires = expirationTime;
+
+  await user.save();
+  console.log('Password reset token and expiration time saved to user:', user);
+
+  const resetUrl = `
+  <p>Dear User,</p>
+  <p>We have received a request to reset your password for your account. To proceed with the password reset, please click on the link below:</p>
+  <p><a href='http://localhost:5000/api/user/request-password-reset/${hashedResetToken}' target='_blank'>Reset Password</a></p>
+  <p>Please note that this link will expire in 30 minutes for security reasons.</p>
+  <p>If you did not request this password reset, you can safely ignore this email. Your account remains secure.</p>
+  <p>Thank you,</p>
+  <p>Oga Manuel 💯</p>
+  `;
+  console.log('Reset URL:', resetUrl);
+
+  const data = {
+    to: email,
+    subject: 'Password Reset Request',
+    html: resetUrl,
+  };
+  // @ts-ignore
+  sendEmail(data);
+  console.log('Email sent for password reset request.');
+
+  res.status(200).json({ msg: 'Reset token sent to email', success: true, token: hashedResetToken });
+});
+
+export const resetPassword = asyncHandler(async (req: Request, res: Response) => {
+  const { password } = req.body;
+  const { token } = req.params;
+
+  const user = await User.findOne({
+    passwordResetToken: token,
+    passwordResetExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    console.log('User not found or token expired.');
+    throw new Error('Token expired, try again later');
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user.password = hashedPassword;
+    console.log('Password updated successfully.');
+
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+
+    await user.save();
+    console.log('User document updated.');
+    res.status(200).json({ msg: 'Password Reset Successfully', success: true });
+  } catch (error) {
+    console.error('Error updating password:', error);
     res.status(500).json({ msg: 'Internal server error', success: false });
   }
 });
