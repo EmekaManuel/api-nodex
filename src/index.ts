@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import { dbConnect } from './config/dbConnect';
 import authRouter from './routes/authRoutes';
 import productRouter from './routes/productRoutes';
+import blogRouter from './routes/blogRoute';
 import { errorHandler, notFound } from './middlewares/errorHandler';
 
 dotenv.config();
@@ -23,6 +24,7 @@ app.use(cookieParser());
 //routes
 app.use('/api/user', authRouter);
 app.use('/api/product', productRouter);
+app.use('/api/blog', blogRouter);
 
 //middlewares
 app.use(notFound);
