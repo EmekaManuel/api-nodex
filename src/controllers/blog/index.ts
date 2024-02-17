@@ -23,11 +23,49 @@ export const editBlog = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-export const getBlog = asyncHandler(async (req: Request, res: Response) => {
+export const getAllBlogs = asyncHandler(async (req: Request, res: Response) => {
   try {
     const allBlogs = await Blog.find();
 
     res.status(200).json(allBlogs);
+  } catch (error) {
+    throw new Error();
+  }
+});
+
+export const getBlogById = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const blog = await Blog.findById(id);
+
+    if (!blog) {
+      return;
+    }
+    const updatedBlog = await Blog.findByIdAndUpdate(
+      id,
+      {
+        $inc: { numViews: 1 },
+      },
+      { new: true },
+    );
+
+    res.status(200).json(updatedBlog);
+  } catch (error) {
+    throw new Error();
+  }
+});
+
+export const deleteBlog = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const blog = await Blog.findById(id);
+
+    if (!blog) {
+      return;
+    }
+
+    const deletedBlog = await Blog.findByIdAndDelete(id);
+    res.status(200).json(deletedBlog);
   } catch (error) {
     throw new Error();
   }
