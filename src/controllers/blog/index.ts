@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import Blog from '../../models/blogModel';
 import asyncHandler from 'express-async-handler';
+import { validateMongodbId } from '../../utils/validatemongodbId';
+import { AuthRequest } from '../../middlewares/authMiddleware';
 
 export const createBlog = asyncHandler(async (req: Request, res: Response) => {
   try {
@@ -68,5 +70,79 @@ export const deleteBlog = asyncHandler(async (req: Request, res: Response) => {
     res.status(200).json(deletedBlog);
   } catch (error) {
     throw new Error();
+  }
+});
+
+export const dislikeBlog = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { blogId } = req.body;
+  validateMongodbId(blogId);
+
+  const blog = await Blog.findById(blogId);
+  const loggedInUserId = req?.user?.id;
+
+  const isDisliked = blog?.isDisliked;
+
+  const alreadyLiked = blog?.likes?.find((userId) => userId?.toString() === loggedInUserId?.toString());
+
+  if (alreadyLiked) {
+    const blog = await Blog.findByIdAndUpdate(
+      blogId,
+      { $pull: { likes: loggedInUserId }, isLiked: false },
+      { new: true },
+    );
+    res.status(200).json({ message: 'This blog has been unliked successfully', blog });
+  }
+
+  if (isDisliked) {
+    const blog = await Blog.findByIdAndUpdate(
+      blogId,
+      { $pull: { disLikes: loggedInUserId }, isDisliked: false },
+      { new: true },
+    );
+    res.status(200).json({ message: 'This blog has been un-disliked successfully', blog });
+  } else {
+    const blog = await Blog.findByIdAndUpdate(
+      blogId,
+      { $push: { disLikes: loggedInUserId }, isDisliked: true },
+      { new: true },
+    );
+    res.status(200).json({ message: 'This blog has been disliked successfully', blog });
+  }
+});
+
+export const likeBlog = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { blogId } = req.body;
+  validateMongodbId(blogId);
+
+  const blog = await Blog.findById(blogId);
+  const loggedInUserId = req?.user?.id;
+
+  const isLiked = blog?.isLiked;
+
+  const alreadyDisliked = blog?.disLikes?.find((userId) => userId?.toString() === loggedInUserId?.toString());
+
+  if (alreadyDisliked) {
+    const blog = await Blog.findByIdAndUpdate(
+      blogId,
+      { $pull: { disLikes: loggedInUserId }, isDisliked: false },
+      { new: true },
+    );
+    res.status(200).json({ message: 'This blog has been liked successfully', blog });
+  }
+
+  if (isLiked) {
+    const blog = await Blog.findByIdAndUpdate(
+      blogId,
+      { $pull: { likes: loggedInUserId }, isLiked: false },
+      { new: true },
+    );
+    res.status(200).json({ message: 'This blog has been unliked successfully', blog });
+  } else {
+    const blog = await Blog.findByIdAndUpdate(
+      blogId,
+      { $push: { likes: loggedInUserId }, isLiked: true },
+      { new: true },
+    );
+    res.status(200).json({ message: 'This blog has been liked successfully', blog });
   }
 });
