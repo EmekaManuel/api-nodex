@@ -15,6 +15,10 @@ interface Product extends Document {
     star: number;
     postedBy: Types.ObjectId | string;
   }>;
+  totalRating: {
+    type: String;
+    default: 0;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -61,6 +65,10 @@ const productSchema: Schema<Product> = new mongoose.Schema(
     },
     sold: {
       type: Number,
+      default: 0,
+    },
+    totalRating: {
+      type: String,
       default: 0,
     },
     ratings: [

@@ -1,5 +1,11 @@
 import express from 'express';
-import { createCategory, getAllCategories, getCategoryById, updateCategory } from '../controllers/category';
+import {
+  createCategory,
+  deleteCategory,
+  getAllCategories,
+  getCategoryById,
+  updateCategory,
+} from '../controllers/product/category';
 import { authMiddleware, isAdmin } from '../middlewares/authMiddleware';
 
 const router = express.Router();
@@ -11,6 +17,6 @@ router.post('/create', authMiddleware, isAdmin, createCategory);
 
 router.put('/edit/:id', authMiddleware, isAdmin, updateCategory);
 
-router.delete('/delete', authMiddleware, isAdmin, createCategory);
+router.delete('/delete/:id', authMiddleware, isAdmin, deleteCategory);
 
 export default router;

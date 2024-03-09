@@ -7,7 +7,9 @@ import { dbConnect } from './config/dbConnect';
 import authRouter from './routes/authRoutes';
 import productRouter from './routes/productRoutes';
 import blogRouter from './routes/blogRoute';
-import categoryRouter from './routes/categoryRoute';
+import productCategoryRouter from './routes/product-categoryRoute';
+import blogCategoryRouter from './routes/blog-categoryRoute';
+import brandRouter from './routes/brandRoute';
 import { errorHandler, notFound } from './middlewares/errorHandler';
 
 dotenv.config();
@@ -26,7 +28,9 @@ app.use(cookieParser());
 app.use('/api/user', authRouter);
 app.use('/api/product', productRouter);
 app.use('/api/blog', blogRouter);
-app.use('/api/category', categoryRouter);
+app.use('/api/category', productCategoryRouter);
+app.use('/api/blog-category', blogCategoryRouter);
+app.use('/api/brand', brandRouter);
 
 //middlewares
 app.use(notFound);

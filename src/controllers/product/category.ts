@@ -1,5 +1,5 @@
 import asyncHandler from 'express-async-handler';
-import Category from '../../models/categoryModel';
+import Category from '../../models/blog-categoryModel';
 import { Request, Response } from 'express';
 
 export const createCategory = asyncHandler(async (req: Request, res: Response) => {
@@ -39,7 +39,7 @@ export const getCategoryById = asyncHandler(async (req: Request, res: Response) 
   }
 });
 
-export const deletedCategory = asyncHandler(async (req: Request, res: Response) => {
+export const deleteCategory = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
     const deletedCategory = await Category.findByIdAndDelete(id);
