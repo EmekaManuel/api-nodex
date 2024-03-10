@@ -17,7 +17,7 @@ export const cloudinaryUploadImage = async (fileToUpload: any) => {
   return new Promise((resolve, reject) => {
     cloudinary.uploader.upload(
       fileToUpload,
-      { resource_type: 'auto' },
+      { folder: 'images', resource_type: 'auto' },
       (error, result: UploadApiResponse | undefined) => {
         if (error) {
           reject(error);

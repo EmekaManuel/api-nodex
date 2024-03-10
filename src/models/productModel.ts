@@ -7,7 +7,7 @@ interface Product extends Document {
   price: number;
   category: string;
   quantity?: number;
-  images?: string[];
+  images?: [];
   brand: 'Apple' | 'Nokia' | 'Samsung';
   color: 'Black' | 'Brown' | 'Red';
   sold: number;
@@ -54,7 +54,7 @@ const productSchema: Schema<Product> = new mongoose.Schema(
       required: true,
     },
     images: {
-      type: [String],
+      type: [],
     },
     brand: {
       type: String,

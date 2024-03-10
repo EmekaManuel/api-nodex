@@ -5,6 +5,7 @@ import { Request, Response } from 'express';
 import { AuthRequest } from '../../middlewares/authMiddleware';
 import { validateMongodbId } from '../../utils/validatemongodbId';
 import UserModel from '../../models/userModel';
+import { cloudinaryUploadImage } from '../../utils/cloudinary';
 
 export const createProduct = asyncHandler(async (req: Request, res: Response) => {
   try {
@@ -183,5 +184,27 @@ export const rating = asyncHandler(async (req: AuthRequest, res: Response) => {
     res.json(ratedProduct);
   } catch (error) {
     throw new Error('error rating product');
+  }
+});
+
+export const imageUpload = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  validateMongodbId(id);
+
+  try {
+    const urls = [];
+    const files = req.files as Express.Multer.File[];
+
+    for (const file of files) {
+      const url = await cloudinaryUploadImage(file.path);
+      urls.push(url);
+    }
+
+    const findProduct = await Product.findByIdAndUpdate(id, { $push: { images: urls } }, { new: true });
+
+    res.status(200).json({ message: 'found product', findProduct });
+  } catch (error) {
+    console.error('Error uploading image', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
