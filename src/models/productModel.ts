@@ -13,6 +13,7 @@ interface Product extends Document {
   sold: number;
   ratings: Array<{
     star: number;
+    comment: String;
     postedBy: Types.ObjectId | string;
   }>;
   totalRating: {
@@ -74,6 +75,7 @@ const productSchema: Schema<Product> = new mongoose.Schema(
     ratings: [
       {
         star: Number,
+        comment: String,
         postedBy: { type: Schema.Types.ObjectId, ref: 'User' },
       },
     ],

@@ -144,7 +144,7 @@ export const addToWishlist = asyncHandler(async (req: AuthRequest, res: Response
 export const rating = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { id } = req.user;
   validateMongodbId(id);
-  const { star, productId } = req.body;
+  const { star, productId, comment } = req.body;
 
   const product = await Product.findById(productId);
   const isProductAreadyRated = product?.ratings.find((userId) => userId.postedBy.toString() === id.toString());
@@ -155,7 +155,7 @@ export const rating = asyncHandler(async (req: AuthRequest, res: Response) => {
         {
           ratings: { $elemMatch: isProductAreadyRated },
         },
-        { $set: { 'ratings.$.star': star } },
+        { $set: { 'ratings.$.star': star, 'ratings.$.comment': comment } },
         // @ts-ignore
         { new: true },
       );
@@ -163,7 +163,7 @@ export const rating = asyncHandler(async (req: AuthRequest, res: Response) => {
       // @ts-ignore
       const rateProduct = await Product.findByIdAndUpdate(
         productId,
-        { $push: { ratings: { star: star, postedBy: id } } },
+        { $push: { ratings: { star: star, postedBy: id, comment: comment } } },
         { new: true },
       );
     }
