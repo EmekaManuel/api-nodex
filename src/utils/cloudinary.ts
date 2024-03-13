@@ -1,4 +1,4 @@
-import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
+import { v2 as cloudinary } from 'cloudinary';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -11,24 +11,27 @@ cloudinary.config({
   cloud_name: CLOUD_NAME,
   api_key: API_KEY,
   api_secret: API_SECRET,
+  secure: true,
 });
 
 export const cloudinaryUploadImage = async (fileToUpload: any) => {
   return new Promise((resolve, reject) => {
-    cloudinary.uploader.upload(
-      fileToUpload,
-      { folder: 'images', resource_type: 'auto' },
-      (error, result: UploadApiResponse | undefined) => {
-        if (error) {
-          reject(error);
-        } else if (result) {
+    cloudinary.uploader.upload(fileToUpload, (error: any, result: any) => {
+      if (error) {
+        console.error('Error uploading image to Cloudinary:', error);
+        reject(error);
+      } else {
+        if (result.secure_url) {
           resolve({
             url: result.secure_url,
+            resource_type: 'auto',
           });
         } else {
-          reject(new Error('Cloudinary upload returned undefined result.'));
+          const errorMessage = 'Secure URL not found in Cloudinary upload result';
+          console.error(errorMessage);
+          reject(new Error(errorMessage));
         }
-      },
-    );
+      }
+    });
   });
 };

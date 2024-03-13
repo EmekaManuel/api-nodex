@@ -6,6 +6,7 @@ import { AuthRequest } from '../../middlewares/authMiddleware';
 import { validateMongodbId } from '../../utils/validatemongodbId';
 import UserModel from '../../models/userModel';
 import { cloudinaryUploadImage } from '../../utils/cloudinary';
+// import { cloudinaryUploadImage } from '../../utils/cloudinary';
 
 export const createProduct = asyncHandler(async (req: Request, res: Response) => {
   try {
@@ -192,15 +193,29 @@ export const imageUpload = asyncHandler(async (req: Request, res: Response) => {
   validateMongodbId(id);
 
   try {
+    // @ts-ignore
+    const uploader = (path: any) => cloudinaryUploadImage(path, 'images');
     const urls = [];
-    const files = req.files as Express.Multer.File[];
+    const files = req.files;
 
+    // @ts-ignore
     for (const file of files) {
-      const url = await cloudinaryUploadImage(file.path);
-      urls.push(url);
+      const { path } = file;
+      const newPath = await uploader(path);
+      urls.push(newPath);
     }
 
-    const findProduct = await Product.findByIdAndUpdate(id, { $push: { images: urls } }, { new: true });
+    const findProduct = await Product.findByIdAndUpdate(
+      id,
+      {
+        images: urls.map((file) => {
+          return file;
+        }),
+      },
+      {
+        new: true,
+      },
+    );
 
     res.status(200).json({ message: 'found product', findProduct });
   } catch (error) {
