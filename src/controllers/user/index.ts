@@ -64,6 +64,42 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
     res.status(401).json({ msg: 'Password do not match', success: false });
   }
 });
+export const loginAdmin = asyncHandler(async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    res.status(400).json({ msg: 'Required values are missing', success: false });
+  }
+
+  const checkAdmin = await User.findOne({ email });
+  if (checkAdmin?.role !== 'admin') {
+    res.status(404).json({ msg: 'This User is Not An Admin', success: false });
+  }
+  if (!checkAdmin) {
+    res.status(404).json({ msg: 'User not found', success: false });
+    return;
+  }
+  const refreshToken = await generateRefreshToken(checkAdmin?.id);
+
+  const updateAdmin = await User.findByIdAndUpdate(
+    checkAdmin?.id,
+    {
+      refreshToken: refreshToken,
+    },
+    { new: true },
+  );
+  res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000,
+  });
+
+  const isPasswordMatch = await bcrypt.compare(password, checkAdmin.password);
+  if (isPasswordMatch) {
+    res.json({ msg: 'Login successful', success: true, token: generateToken(checkAdmin?._id), admin: updateAdmin });
+  } else {
+    res.status(401).json({ msg: 'Password do not match', success: false });
+  }
+});
 
 export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
   try {

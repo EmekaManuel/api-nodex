@@ -12,6 +12,7 @@ import {
   updatePassword,
   resetPassword,
   requestPasswordReset,
+  loginAdmin,
 } from '../controllers/user';
 import { authMiddleware, isAdmin } from '../middlewares/authMiddleware';
 import { handleRefreshToken } from '../config/refreshToken';
@@ -20,6 +21,7 @@ const router = express.Router();
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
+router.post('/admin-login', loginAdmin);
 router.post('/request-password-reset', requestPasswordReset);
 router.put('/update-password', authMiddleware, updatePassword);
 
