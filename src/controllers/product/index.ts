@@ -6,6 +6,7 @@ import { AuthRequest } from '../../middlewares/authMiddleware';
 import { validateMongodbId } from '../../utils/validatemongodbId';
 import UserModel from '../../models/userModel';
 import { cloudinaryUploadImage } from '../../utils/cloudinary';
+import fs from 'fs';
 // import { cloudinaryUploadImage } from '../../utils/cloudinary';
 
 export const createProduct = asyncHandler(async (req: Request, res: Response) => {
@@ -203,6 +204,8 @@ export const imageUpload = asyncHandler(async (req: Request, res: Response) => {
       const { path } = file;
       const newPath = await uploader(path);
       urls.push(newPath);
+      console.log(file);
+      fs.unlinkSync(path);
     }
 
     const findProduct = await Product.findByIdAndUpdate(

@@ -2,6 +2,7 @@ import multer from 'multer';
 import { NextFunction, Request, Response } from 'express';
 import sharp from 'sharp';
 import path from 'path';
+import fs from 'fs';
 
 export const multerStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -38,6 +39,7 @@ export const productImgResize = async (req: Request, res: Response, next: NextFu
         .toFormat('jpeg')
         .jpeg({ quality: 90 })
         .toFile(`public/images/products/${file.filename}`);
+      fs.unlinkSync(`public/images/products/${file.filename}`);
     }),
   );
   next();
