@@ -7,7 +7,7 @@ interface User extends Document {
   password: string;
   role: string;
   cart: string[];
-  address: Types.ObjectId[];
+  address: string;
   wishlist: Types.ObjectId[];
   isBlocked: boolean;
   refreshToken: string;
@@ -52,7 +52,9 @@ const userSchema: Schema<User> = new mongoose.Schema(
       type: [String], // Use StringConstructor to define an array of strings
       default: [],
     },
-    address: [{ type: Schema.Types.ObjectId, ref: 'Address' }],
+    address: {
+      type: String,
+    },
     wishlist: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
     passwordChangedAt: {
       type: Date,

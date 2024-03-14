@@ -325,3 +325,27 @@ export const resetPassword = asyncHandler(async (req: Request, res: Response) =>
     res.status(500).json({ msg: 'Internal server error', success: false });
   }
 });
+
+export const getWishlist = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { id } = req.user;
+  try {
+    const user = await User.findById(id).populate('wishlist');
+    res.status(200).json({ message: 'wishlist found', user });
+  } catch (error: any) {
+    throw new Error(error);
+  }
+});
+
+export const saveAddress = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { id } = req.user;
+  validateMongodbId(id);
+
+  try {
+    const updateUserAddress = await User.findByIdAndUpdate(id, {
+      address: req.body.address,
+    });
+    res.status(200).json({ message: 'user address saved', updateUserAddress });
+  } catch (error) {
+    res.status(500).json({ error: 'error saving address' });
+  }
+});
