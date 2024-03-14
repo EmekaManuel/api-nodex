@@ -12,10 +12,12 @@ import {
 } from '../controllers/product';
 import { authMiddleware, isAdmin } from '../middlewares/authMiddleware';
 import { productImgResize, uploadImage } from '../middlewares/imageUpload';
+import { userCart } from '../controllers/user';
 
 const router = express.Router();
 
 router.post('/create', authMiddleware, isAdmin, createProduct);
+router.post('/cart', authMiddleware, userCart);
 
 router.get('/:id', findProduct);
 router.get('/', getAllProduct);

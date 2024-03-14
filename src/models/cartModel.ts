@@ -2,7 +2,7 @@ import mongoose, { Document, Schema, Types } from 'mongoose';
 
 interface CartItem {
   product: Types.ObjectId;
-  quantity: number;
+  count: number;
 }
 
 interface Cart extends Document {
@@ -20,7 +20,7 @@ const cartSchema = new Schema<Cart>(
     items: [
       {
         product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
-        quantity: { type: Number, default: 1 },
+        count: { type: Number, default: 1 },
       },
     ],
     total: { type: Number, default: 0 },

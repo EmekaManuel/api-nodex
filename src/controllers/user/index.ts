@@ -9,6 +9,8 @@ import { validateMongodbId } from '../../utils/validatemongodbId';
 import { generateResetToken } from '../../utils/helpers';
 import crypto from 'crypto';
 import { sendEmail } from '../../utils/mailer';
+import CartModel from '../../models/cartModel';
+import Product from '../../models/productModel';
 
 export const registerUser = asyncHandler(async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -347,5 +349,66 @@ export const saveAddress = asyncHandler(async (req: AuthRequest, res: Response) 
     res.status(200).json({ message: 'user address saved', updateUserAddress });
   } catch (error) {
     res.status(500).json({ error: 'error saving address' });
+  }
+});
+
+export const userCart = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { cart } = req.body;
+  const { id } = req.user;
+  validateMongodbId(id);
+
+  try {
+    const user = await User.findById(id);
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    const alreadyHasACart = await CartModel.findOne({ cartOwner: user._id });
+
+    if (alreadyHasACart) {
+      await alreadyHasACart.deleteOne({ cartOwner: user._id });
+    }
+
+    const products = [];
+    let cartTotal = 0;
+    for (let i = 0; i < cart.length; i++) {
+      const product = cart[i];
+      const getProduct = await Product.findById(product._id).select('price').exec();
+      if (getProduct && getProduct.price !== undefined) {
+        // Check if getProduct exists and its price is defined
+        const price = getProduct.price * product.count;
+        cartTotal += price;
+        products.push({
+          product: product._id,
+          count: product.count,
+          color: product.color,
+          price,
+        });
+      }
+    }
+
+    console.log(cartTotal);
+
+    const cartData = {
+      cartOwner: user._id,
+      items: products,
+      total: cartTotal,
+      discount: 0,
+    };
+    const newCart = new CartModel(cartData);
+    await newCart.save();
+
+    const responseProducts = products.map((product) => ({
+      product: product.product,
+      count: product.count,
+      color: product.color,
+      price: product.price,
+    }));
+
+    res.status(200).json(responseProducts);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
